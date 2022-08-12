@@ -16,7 +16,7 @@ export function addStringToUser(user, string) {
 
 export async function sendMail(emailId, token) {
 
-    const link = `http://localhost:3000/resetPassword/${token}`
+    const link = `https://remarkable-pie-2f428a.netlify.app/resetPassword/${token}`
 
     let transporter = nodemailer.createTransport({
         host: 'smtp.gmail.com',
