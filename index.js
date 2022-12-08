@@ -20,4 +20,6 @@ app.post('/forgotPassword', forgotPassword)
 // reset Password
 app.post('/resetPassword', resetPass)
 
-app.listen(process.env.PORT, () => console.log(`Server is running on port ${process.env.PORT}`))
+const Port = process.env.PORT || 4000;
+
+app.listen(Port, () => console.log(`Server is running on port ${Port}`))
