@@ -5,10 +5,9 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
+    "build": "echo 'Building...'",
     "start": "node index.js",
-    "build": "my build script line",
-    "server": "nodemon index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "server": "nodemon index.js"
   },
   "author": "Joshua Ashvinth Roys",
   "license": "ISC",
