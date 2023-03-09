@@ -30,7 +30,6 @@ const register = async (req, res) => {
 const login = async (req, res) => {
 
     try {
-
         let userInDB = await User.findOne({ email: req.body.email });
         if (!userInDB) {
             res.status(404).send({ msg: "User email-id not found", status: 404 });
@@ -41,10 +40,7 @@ const login = async (req, res) => {
                 res.status(409).send({ msg: "Wrong user login password", status: 409 });
             } else {
                 let authToken = await jwt.sign({ email: userInDB.email }, process.env.KEY);
-                res
-                    .cookie("authToken", authToken, { maxAge: 3600 * 6000 })
-                    .status(200)
-                    .send({ msg: "Login Successful", status: 200 });
+                res.status(200).send({ msg: "Login Successful", status: 200, token: authToken });
             }
 
         }
