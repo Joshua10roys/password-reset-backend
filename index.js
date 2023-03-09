@@ -1,25 +1,24 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
+import mongoose from 'mongoose';
 import { register, login, forgotPassword, resetPass } from './controller/controller.js';
+
 
 const app = express();
 dotenv.config();
-app.use(cors());
+app.use(cors({ origin: true, credentials: true }));
 app.use(express.json())
 
-// user registration
+
 app.post('/register', register)
-
-// user login
 app.post('/login', login)
-
-// forgotPassword
 app.post('/forgotPassword', forgotPassword)
-
-// reset Password
 app.post('/resetPassword', resetPass)
 
-const Port = process.env.PORT || 4000;
 
-app.listen(Port, () => console.log(`Server is running on port ${Port}`))
+await mongoose.connect(process.env.MONGOBD)
+    .then(() => console.log("Connected to Database"))
+    .then(() => app.listen(process.env.PORT))
+    .then(() => console.log("Server Started"))
+    .catch((err) => console.log(err))

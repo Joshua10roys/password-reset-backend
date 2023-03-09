@@ -1,58 +1,90 @@
-import { users } from '../data/data.js';
-import { findUserByMailId, addStringToUser, findUserByToken, addNewPasswordToUser, sendMail } from '../helper/helper.js';
+import User from '../models/userSchema.js';
+import { sendMail } from '../helper/helper.js';
 import randomString from 'random-string';
+import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 
-// user registration
+
 const register = async (req, res) => {
 
-    let user = await findUserByMailId(req.body.email);
-    if (user) {
-        res.status(409).send({ msg: "Sorry, email Id already exist", status: 409 });
-    } else {
-        await users.push(req.body);
-        res.status(201).send({ msg: "User registred successful", status: 201 });
+    try {
+
+        let userInDB = await User.findOne({ email: req.body.email });
+        if (userInDB) {
+            res.status(409).send({ msg: "Sorry, email Id already exist", status: 409 });
+        } else {
+            let hashPassword = await bcrypt.hashSync(req.body.password, 5);
+            req.body.password = hashPassword;
+            await User.create(req.body);
+            res.status(201).send({ msg: "User registred successful", status: 201 });
+        }
+
+    } catch (error) {
+        res.status(500).send({ msg: "Something Went Wrong" })
+        console.log(error);
     }
+
 }
 
-// user login
+
 const login = async (req, res) => {
 
-    let user = await findUserByMailId(req.body.email);
-    if (user) {
-        if (req.body.password === user.password) {
-            res.status(200).send({ msg: "Login Successful", status: 200 });
+    try {
+
+        let userInDB = await User.findOne({ email: req.body.email });
+        if (!userInDB) {
+            res.status(404).send({ msg: "User email-id not found", status: 404 });
         } else {
-            res.status(409).send({ msg: "password doesn't match", status: 409 });
+
+            let isPasswordMatch = await bcrypt.compareSync(req.body.password, userInDB.password);
+            if (!isPasswordMatch) {
+                res.status(409).send({ msg: "Wrong user login password", status: 409 });
+            } else {
+                let authToken = await jwt.sign({ email: userInDB.email }, process.env.KEY);
+                res
+                    .cookie("authToken", authToken, { maxAge: 3600 * 6000 })
+                    .status(200)
+                    .send({ msg: "Login Successful", status: 200 });
+            }
+
         }
-    } else {
-        res.status(404).send({ msg: "User's email Id not found", status: 404 });
+
+    } catch (error) {
+        res.send({ msg: "Something Went Wrong" })
+        console.log(error);
     }
+
 }
 
-// forgotPassword
+
 const forgotPassword = async (req, res) => {
 
-    let user = await findUserByMailId(req.body.email);
+    try {
 
-    if (user) {
+        let userFromDB = await User.findOne({ email: req.body.email });
+        if (!userFromDB) {
+            res.status(404).send({ msg: "User's email Id not found", status: 404 });
+        } else {
+            let string = await randomString({ length: 10 });
+            let resetToken = await jwt.sign({ string }, "pass_reset", { expiresIn: "1h" });
 
-        let string = await randomString({ length: 20 });
-        let token = await jwt.sign({ string }, "pass_reset", { expiresIn: "1h" });
+            await userFromDB.updateOne({ resetToken: resetToken });
+            sendMail(userFromDB.email, resetToken);
 
-        addStringToUser(user, string);
-        sendMail(req.body.email, token);
+            res.status(200).send({ msg: "Password reset link sent to mail", status: 200 });
+        }
 
-        res.status(200).send({ msg: "Password reset link sent to mail", status: 200 })
-    } else {
-        res.status(404).send({ msg: "User's email Id not found", status: 404 })
+    } catch (error) {
+        res.send({ msg: "Something Went Wrong" })
+        console.log(error);
     }
+
 }
 
-// reset Password
-const resetPass = async (req, res) => {
 
-    await jwt.verify(req.body.token, 'pass_reset', (error, info) => {
+const resetPass = (req, res) => {
+
+    jwt.verify(req.body.resetToken, 'pass_reset', async (error, info) => {
 
         if (error) {
 
@@ -61,23 +93,27 @@ const resetPass = async (req, res) => {
             } else {
                 res.status(400).send({ msg: 'Sorry, Something went wrong', status: 400 });
             }
+
         } else if (info) {
-            addNewPassword(info.string);
+
+            let userInDB = await User.findOne({ resetToken: req.body.resetToken });
+            if (userInDB) {
+
+                let hashPassword = await bcrypt.hashSync(req.body.password, 5);
+                await userInDB.updateOne({ password: hashPassword, resetToken: "" });
+                res.status(200).send({ msg: 'New password updated successfully', status: 200 });
+
+            } else {
+                res.status(400).send({ msg: 'Sorry, wrong request', status: 400 });
+            }
+
         } else {
             res.status(400).send({ msg: 'Sorry, Something went wrong' });
         }
+
     });
 
-    async function addNewPassword(string) {
-        let user = await findUserByToken(string);
-
-        if (user) {
-            await addNewPasswordToUser(user.email, req.body.password);
-            res.status(200).send({ msg: 'New password updated successfully', status: 200 });
-        } else {
-            res.status(400).send({ msg: 'Sorry, Something went wrong', status: 400 });
-        }
-    }
 }
 
-export { register, login, forgotPassword, resetPass }; 
+
+export { register, login, forgotPassword, resetPass };

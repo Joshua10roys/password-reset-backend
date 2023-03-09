@@ -1,22 +1,9 @@
-import { users } from '../data/data.js';
 import nodemailer from 'nodemailer';
 
 
-export function findUserByMailId(req_email) {
-    let user = users.find(user => user.email == req_email);
-    return user;
-}
+export async function sendMail(emailId, resetToken) {
 
-
-export function addStringToUser(user, string) {
-    let index = users.findIndex(obj => obj.email == user.email);
-    users[index] = { ...user, string: string }
-}
-
-
-export async function sendMail(emailId, token) {
-
-    const link = `https://remarkable-pie-2f428a.netlify.app/resetPassword/${token}`
+    const link = `https://remarkable-pie-2f428a.netlify.app/resetPassword/${resetToken}`
 
     let transporter = nodemailer.createTransport({
         host: 'smtp.gmail.com',
@@ -40,16 +27,4 @@ export async function sendMail(emailId, token) {
     }
 
     await transporter.sendMail(mailOption)
-}
-
-
-export function findUserByToken(token) {
-    let user = users.find(obj => obj.string == token);
-    return user;
-}
-
-
-export function addNewPasswordToUser(email, password) {
-    let index = users.findIndex(obj => obj.email == email);
-    users[index] = { email, password }
 }
