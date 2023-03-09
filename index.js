@@ -7,7 +7,7 @@ import { register, login, forgotPassword, resetPass } from './controller/control
 
 const app = express();
 dotenv.config();
-app.use(cors({ origin: true, credentials: true }));
+app.use(cors({ credentials: true }));
 app.use(express.json())
 
 
