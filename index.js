@@ -8,13 +8,13 @@ import { register, login, forgotPassword, resetPass } from './controller/control
 const app = express();
 dotenv.config();
 app.use(cors({ origin: "*", credentials: true }));
-app.use(express.json())
+app.use(express.json());
 
 
-app.post('/register', register)
-app.post('/login', login)
-app.post('/forgotPassword', forgotPassword)
-app.post('/resetPassword', resetPass)
+app.post('/register', register);
+app.post('/login', login);
+app.post('/forgotPassword', forgotPassword);
+app.post('/resetPassword', resetPass);
 
 
 await mongoose.connect(process.env.MONGOBD)
