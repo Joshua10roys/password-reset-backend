@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import mongoose from 'mongoose';
 import { register, login, forgotPassword, resetPass } from './controller/controller.js';
+import { sendEmailToJoshua } from './helper/helper2.js';
 
 
 const app = express();
@@ -15,6 +16,7 @@ app.post('/register', register);
 app.post('/login', login);
 app.post('/forgotPassword', forgotPassword);
 app.post('/resetPassword', resetPass);
+app.post('/portfolio/email', sendEmailToJoshua);
 
 
 await mongoose.connect(process.env.MONGOBD)
